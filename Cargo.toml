@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name    = "sum_of_two"
+name    = "two_sum"
 version = "0.1.0"
 
 [dependencies]
