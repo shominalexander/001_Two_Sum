@@ -1,119 +1,84 @@
-#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
-struct Item { index: usize, value: i32 }
+fn request(query: &str) -> String {
+ let mut text = String::new();
 
-fn request() -> String {
- let mut value: String = String::new();
+ println!("{}", query);
 
- std::io::stdin().read_line(&mut value).expect("Input failed");
+ match std::io::stdin().read_line(&mut text) {
+  Ok(result) => {
+   if result > 0 {
+    text = text.trim().to_string();
+    text = text.replace("\n", "") ;
+    text = text.replace("\r", "") ;
+   }//if result > 0 {
+  }//Ok(result) => {
 
- value = value.trim().to_string();
- value = value.replace("\n", "") ;
- value = value.replace("\r", "") ;
+  Err(error) => {
+   println!("error: {:?}", error);
 
- value
-}//fn request() -> String {
+  }//Err(error) => { 
+ }//match std::io::stdin().read_line(&mut text) {
+
+ text
+}//fn request(text: &str) -> String {
 
 fn main() {
- loop {
-  println!("\r\n\r\nvector:");
-
-  let mut input: String = request();
+ 'vector: loop {
+  let mut text: String = request("\n\nVec<i32>:");
  
-  if &input[..] == "exit" {
-   break;   
+  match &text[..] {
+   "back" | "exit" => { break; } 
+   _ => {
+    match serde_json::from_str::<Vec<i32>>(&text[..]) {
+     Ok(vector) => {
+      loop {
+       text = request("\ni32:");
 
-  } else {//if &input[..] == "exit" {
-   let mut equal  : bool                = false                                                  ;
-   let     integer: Vec<i32>            = serde_json::from_str(&input[..]).expect("Wrong format");
-   let mut items  : std::vec::Vec<Item> = std::vec::Vec::new()                                   ;
-   let mut minimum: i32                 = 0                                                      ;
-   let     size   : usize               = integer.len()                                          ;
+       match &text[..] {
+        "back" => { break        ; } 
+        "exit" => { break 'vector; } 
+        _ => {
+         match serde_json::from_str::<i32>(&text[..]) {
+          Ok(sum) => {
+           let mut index: usize                            ;
+           let mut items = std::collections::HashMap::new();
 
-   println!("\r\ntarget:");
+           index = 0usize;
+           for value in &vector {
+            items.insert(value, index);
 
-   input = request();
+            index += 1;
+           }//for value in &vector {
 
-   if &input[..] == "exit" {
-    break;   
+           index = 0usize;
+           for value in &vector {
+            if let Some(answer) = items.get(&(sum - value)) {
+             if *answer != index {
+              println!("answer: {:?}", vec![index, *answer]);
 
-   } else {//if &input[..] == "exit" {
-    let mut left_current : usize = 0                                                 ;
-    let mut left_nearest : usize = 0                                                 ;
-    let     last         : usize = size - 1                                          ;      
-    let mut right_current: usize = last                                              ;
-    let mut right_nearest: usize = 0                                                 ;
-    let     target       : i32   = (&input[..]).trim().parse().expect("Wrong format");
+              break;
+             }//if *answer != index {
+            }//if let Some(answer) = items.get(&(sum - value)) {
 
-    if size > 1usize {
-     for i in 0..size {
-      items.push(Item{index: i, value: integer[i]});
+            index += 1;
+           }//for value in &vector {
+          }//Ok(sum) => {
 
-     }//for i in 0..size {
+          Err(error) => {
+           println!("error: {:?}", error);
 
-     items.sort_by(|a, b| a.value.cmp(&b.value));
+          }//Err(error) => { 
+         }//match serde_json::from_str::<Vec<i32>>(&text[..]) {
+        }//_ => {
+       }//match &text[..] {
+      }//loop {
+     }//Ok(vector) => {
 
-     while left_current < right_current {
-      let sum: i32 = items[left_current].value + items[right_current].value;
+     Err(error) => {
+      println!("error: {:?}", error);
 
-      if sum == target {
-       equal = true;
- 
-       break;
-
-      } else {//if sum == target {
-       let difference: i32;
-
-       if sum < target {
-        difference = target - sum;
-
-       } else {//if sum < target {
-        difference = sum - target;
-
-       }//} else {//if sum < target {
-
-       if left_current == 0 && right_current == last {
-        minimum       = difference;
-        left_nearest  = 0         ;
-        right_nearest = last      ;
-
-       } else {//if left_current == 0 && right_current == last {
-        if difference < minimum {
-         left_nearest  = left_current ;
-         minimum       = difference   ;
-         right_nearest = right_current;
-        }//if difference < minimum {
-       }//} else {//if left_current == 0 && right_current == last {
-
-       if sum < target {
-        left_current += 1;
-
-       } else {//if sum < target {
-        right_current -= 1;
-
-       }//} else {//if sum < target {
-      }//} else {//if sum == target {
-     }//while left_current < right_current {
-    }//if size > 1usize {
-
-    if equal {
-     if items[left_current].index < items[right_current].index {
-      println!("\r\ntarget:\r\n{:?}" , vec![items[left_current].index, items[right_current].index]);
-
-     } else {//if items[left_current].index < items[right_current].index {
-      println!("\r\ntarget:\r\n{:?}", vec![items[right_current].index, items[left_current].index]);
-
-     }//} else {//if items[left_current].index < items[right_current].index {
-
-    } else {//if equal {
-     if items[left_nearest].index < items[right_nearest].index {
-      println!("\r\nnearest:\r\n{:?}", vec![items[left_nearest].index, items[right_nearest].index]);
-
-     } else {//if items[left_nearest].index < items[right_nearest].index {
-      println!("\r\nnearest:\r\n{:?}", vec![items[right_nearest].index, items[left_nearest].index]);
-
-     }//} else {//if items[left_nearest].index < items[right_nearest].index {
-    }//if equal {//} else {//if equal {
-   }//} else {//if &input[..] == "exit" {
-  }//} else {//if &input[..] == "exit" {
- }//loop {
+     }//Err(error) => { 
+    }//match serde_json::from_str::<Vec<i32>>(&text[..]) {
+   }//_ => {
+  }//match &text[..] {
+ }//'vector: loop {
 }//fn main() {
